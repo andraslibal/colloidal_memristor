@@ -142,6 +142,8 @@ void initialize_from_file(int argc, char *argv[])
     read_line_from_file(parameterfile, "echo_time", "int", &global.echo_time);
     read_line_from_file(parameterfile, "movie_time", "int", &global.movie_time);
     read_line_from_file(parameterfile, "statistics_time", "int", &global.statistics_time);
+    read_line_from_file(parameterfile, "relax_time", "int", &global.relax_time);
+    read_line_from_file(parameterfile, "relax_duration", "int", &global.relax_duration);
 
     read_line_from_file(parameterfile, "generic_particle_R", "double", &global.generic_particle_R);
     read_line_from_file(parameterfile, "generic_particle_k_spring", "double", &global.generic_particle_k_spring);
@@ -401,69 +403,6 @@ void initialize_particles()
         global.particle_dy_so_far[i] = 0.0;
         global.particle_dx[i] = 0.0;
         global.particle_dy[i] = 0.0;
-    }
-
-    printf("%d Particles initialized successfully\n", global.N_particle);
-}
-
-void initialize_two_particles()
-{
-    int j, N;
-    double min_dist;
-    double x_temp, y_temp, theta_temp;
-    double dx, dy, dr;
-    char overlap;
-
-    global.particle_R = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_color = (int *)malloc(global.N_particle * sizeof(int));
-    global.particle_fx = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_fy = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dx_so_far = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dy_so_far = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dx = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dy = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_motor_force = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_cosfi = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_sinfi = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_motor_ellapsed_time = (int *)malloc(global.N_particle * sizeof(int));
-    global.particle_motor_total_time = (int *)malloc(global.N_particle * sizeof(int));
-
-    global.particle_is_tumbling = (int *)malloc(global.N_particle * __SIZEOF_INT__);
-    global.particle_is_active = (int *)malloc(global.N_particle * __SIZEOF_INT__);
-    global.particle_tumbling_torque = (double *)malloc(global.N_particle * __SIZEOF_DOUBLE__);
-
-    global.cluster = (struct cluster *)malloc(global.N_particle * sizeof(struct cluster));
-    global.particle = (struct particle *)malloc(global.N_particle * sizeof(struct particle));
-    global.particle_neighbor_nr = (int *)malloc(global.N_particle * sizeof(int));
-
-    // this means the discs cover about half of the system (0.4)
-    // with random deposition we can go up to around 0.5
-    min_dist = 2.0 * global.generic_particle_R;
-    printf("Min dist = %lf Max radius = %lf\n", min_dist, min_dist / 2.0);
-
-    for (int i = 0; i < global.N_particle; i++)
-    {
-        global.particle_R[i] = global.generic_particle_R;
-        global.particle_cosfi[i] = cos(global.particle_angle_rad[i]);
-        global.particle_sinfi[i] = sin(global.particle_angle_rad[i]);
-        global.particle_neighbor_nr[i] = 0;
-
-        if (Rand() < global.generic_particle_active_fraction)
-            global.particle_is_active[i] = 1;
-        else
-            global.particle_is_active[i] = 0;
-
-        global.particle_motor_force[i] = global.particle_is_active[i] * global.generic_particle_motor_force;
-        global.particle_motor_ellapsed_time[i] = 0;
-        global.particle_motor_total_time[i] = global.generic_particle_motor_minimum_time;
-
-        global.particle_fx[i] = 0.0;
-        global.particle_fy[i] = 0.0;
-
-        global.particle_dx_so_far[i] = 0.0;
-        global.particle_dy_so_far[i] = 0.0;
-
-        global.particle_color[i] = 2;
     }
 
     printf("%d Particles initialized successfully\n", global.N_particle);
@@ -779,39 +718,6 @@ void rebuild_Verlet()
     global.flag_Verlet_needs_rebuild = 0;
 }
 
-void color_by_speed() {
-    double dr;
-    double min_dr = 0.35 * global.movie_time / 500;  // because initially it was set for movie time = 500
-    double max_dr = 1.1 * global.movie_time / 500;
-    double color_nr = 10;
-    int offset = 5;
-
-    for (int i = 0; i < global.N_particle; i++)
-    {
-
-        dr = sqrt(global.particle_dx[i] * global.particle_dx[i] + global.particle_dy[i] * global.particle_dy[i]);
-        
-        int color_i = (int)(dr / max_dr * (color_nr-1));
-        if (dr >= min_dr)
-        {
-            if (color_i > (color_nr-1)) // dr > max_dr
-            {
-                global.particle_color[i] = offset + (color_nr-1);
-            }
-            else // dr > min_dr && dr < max_dr
-            {
-                global.particle_color[i] = offset + color_i;
-            }
-        }
-        else {
-            global.particle_color[i] = 5;
-        }
-
-        global.particle_dx[i] = 0;
-        global.particle_dy[i] = 0;
-    }
-}
-
 void move_particles()
 {
 
@@ -826,9 +732,6 @@ void move_particles()
         // gather the dx,dy so far
         global.particle_dx_so_far[i] += dx;
         global.particle_dy_so_far[i] += dy;
-
-        global.particle_dx[i] += dx;
-        global.particle_dy[i] += dy;
 
         check_Verlet_need_to_rebuild(i);
 
@@ -859,8 +762,11 @@ void move_particles()
 
         global.particle_cosfi[i] = cos(global.particle_angle_rad[i]);
         global.particle_sinfi[i] = sin(global.particle_angle_rad[i]);
-        global.avg_fx += global.particle_fx[i];
-        global.avg_fy += global.particle_fy[i];
+
+        if (global.particle_eta[i] == global.eta_small) {
+            global.avg_fx += global.particle_fx[i];
+            global.avg_fy += global.particle_fy[i];
+        }
     }
 
      // zero all forces on particles
@@ -986,12 +892,12 @@ void run_simulation()
 
     for (global.time = 0; global.time < global.total_runtime; global.time++)
     {
-        //calculate_internal_motor_forces();
         calculate_interparticle_forces();
-        //calculate_pinning_forces();
-        calculate_dragging_force();
         calculate_thermal_noise();
-        //calculate_magnus_force();
+
+        if (global.time >= global.relax_time && global.time <= global.relax_time + global.relax_duration) {
+            calculate_dragging_force();
+        }
 
         if (global.time % global.echo_time == 0)
         {
@@ -1031,10 +937,7 @@ int main(int argc, char *argv[])
     copy_parameters_file(argc, argv);
     initialize_output_files();
 
-    initialize_pinningsites();
-    initialize_pinning_grid();
     initialize_particles();
-
     initialize_statistics();
 
     rebuild_Verlet();

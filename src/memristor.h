@@ -43,6 +43,9 @@ struct global_struct {
     int movie_time;
     int statistics_time;
 
+    int relax_time;
+    int relax_duration;
+
     int *Verlet_i;
     int *Verlet_j;
     int N_Verlet;
