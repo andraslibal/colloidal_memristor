@@ -895,7 +895,7 @@ void run_simulation()
         calculate_interparticle_forces();
         calculate_thermal_noise();
 
-        if (global.time >= global.relax_time && global.time <= global.relax_time + global.relax_duration) {
+        if (global.time < global.relax_time || global.time >= global.relax_time + global.relax_duration) {
             calculate_dragging_force();
         }
 
