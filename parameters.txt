@@ -19,5 +19,6 @@ dragging_force_x 1
 dragging_force_y 0
 eta_small 1
 eta_large 10
-obstacle_ratio 0
+obstacle_ratio 0.1
+temperature 0.5
 seedToSet 0 

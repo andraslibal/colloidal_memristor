@@ -108,6 +108,8 @@ struct global_struct {
     double dragging_force_x;
     double dragging_force_y;
 
+    double temperature;
+
     /* Statistics */
 
     int largest_cluster_size_sum;

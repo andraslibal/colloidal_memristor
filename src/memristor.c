@@ -159,6 +159,7 @@ void initialize_from_file(int argc, char *argv[])
     read_line_from_file(parameterfile, "eta_small", "double", &global.eta_small);
     read_line_from_file(parameterfile, "eta_large", "double", &global.eta_large);
     read_line_from_file(parameterfile, "obstacle_ratio", "double", &global.obstacle_ratio);
+    read_line_from_file(parameterfile, "temperature", "double", &global.temperature);
 
     read_line_from_file(parameterfile, "seedToSet", "uint64_t", &global.seedToSet);
     if (global.seedToSet != 0)
@@ -530,6 +531,13 @@ void calculate_dragging_force() {
     {
         global.particle_fx[i] += global.dragging_force_x;
         global.particle_fy[i] += global.dragging_force_y;
+    }
+}
+
+void calculate_thermal_noise() {
+    for(int i=0; i<global.N_particle; i++) {
+        global.particle_fx[i] += global.temperature * gasdev();
+        global.particle_fy[i] += global.temperature * gasdev();
     }
 }
 
@@ -982,6 +990,7 @@ void run_simulation()
         calculate_interparticle_forces();
         //calculate_pinning_forces();
         calculate_dragging_force();
+        calculate_thermal_noise();
         //calculate_magnus_force();
 
         if (global.time % global.echo_time == 0)
