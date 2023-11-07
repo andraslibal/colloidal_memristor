@@ -468,8 +468,10 @@ void calculate_dragging_force() {
 
     for (i = 0; i < global.N_particle; i++)
     {
-        global.particle_fx[i] += global.dragging_force_x;
-        global.particle_fy[i] += global.dragging_force_y;
+        if (global.particle_eta[i] == global.eta_small) {
+            global.particle_fx[i] += global.dragging_force_x;
+            global.particle_fy[i] += global.dragging_force_y;
+        }
     }
 }
 

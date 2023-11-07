@@ -1,4 +1,4 @@
-basename t4
+basename test_t1
 SX 160.0
 SY 160.0
 N_particle 4000
@@ -8,7 +8,7 @@ total_runtime 5000000
 echo_time 10000
 movie_time 500
 statistics_time 1000
-relax_time 2500000
+relax_time 2000000
 relax_duration 1000000
 generic_particle_R 1.0
 generic_particle_k_spring 20.0
@@ -22,5 +22,5 @@ dragging_force_y 0
 eta_small 1
 eta_large 10
 obstacle_ratio 0.3
-temperature 4
+temperature 1
 seedToSet 0 
