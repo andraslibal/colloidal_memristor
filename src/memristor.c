@@ -50,7 +50,6 @@ void initialize_output_files()
         exit(1);
     }
     printf("Successfully opened movie file %s\n", movie_file_name);
-
 }
 
 void read_line_from_file(FILE *parameterfile, char descript[], char type[], void *value)
@@ -144,6 +143,10 @@ void initialize_from_file(int argc, char *argv[])
     read_line_from_file(parameterfile, "statistics_time", "int", &global.statistics_time);
     read_line_from_file(parameterfile, "relax_time", "int", &global.relax_time);
     read_line_from_file(parameterfile, "relax_duration", "int", &global.relax_duration);
+
+    read_line_from_file(parameterfile, "N_additional_particles", "int", &global.N_additional_particles);
+    read_line_from_file(parameterfile, "N_steps_to_add_more_particles", "int", &global.N_steps_to_add_more_particles);
+    read_line_from_file(parameterfile, "N_times_to_add_more_particles", "int", &global.N_times_to_add_more_particles);
 
     read_line_from_file(parameterfile, "generic_particle_R", "double", &global.generic_particle_R);
     read_line_from_file(parameterfile, "generic_particle_k_spring", "double", &global.generic_particle_k_spring);
@@ -313,33 +316,32 @@ void initialize_particles()
     double dx, dy, dr;
     char overlap;
 
-    global.particle_x = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_y = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_R = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_color = (int *)malloc(global.N_particle * sizeof(int));
-    global.particle_fx = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_fy = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dx_so_far = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dy_so_far = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dx = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_dy = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_motor_force = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_angle_rad = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_cosfi = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_sinfi = (double *)malloc(global.N_particle * sizeof(double));
-    global.particle_motor_ellapsed_time = (int *)malloc(global.N_particle * sizeof(int));
-    global.particle_motor_total_time = (int *)malloc(global.N_particle * sizeof(int));
+    global.particle_x = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_y = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_R = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_color = (int *)malloc((global.N_particle + global.N_additional_particles) * sizeof(int));
+    global.particle_fx = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_fy = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_dx_so_far = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_dy_so_far = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_dx = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_dy = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_motor_force = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_angle_rad = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_cosfi = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_sinfi = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
+    global.particle_motor_ellapsed_time = (int *)malloc((global.N_particle + global.N_additional_particles) * sizeof(int));
+    global.particle_motor_total_time = (int *)malloc((global.N_particle + global.N_additional_particles) * sizeof(int));
 
-    global.particle_is_tumbling = (int *)malloc(global.N_particle * __SIZEOF_INT__);
-    global.particle_is_active = (int *)malloc(global.N_particle * __SIZEOF_INT__);
-    global.particle_tumbling_torque = (double *)malloc(global.N_particle * __SIZEOF_DOUBLE__);
+    global.particle_is_tumbling = (int *)malloc((global.N_particle + global.N_additional_particles) * __SIZEOF_INT__);
+    global.particle_is_active = (int *)malloc((global.N_particle + global.N_additional_particles) * __SIZEOF_INT__);
+    global.particle_tumbling_torque = (double *)malloc((global.N_particle + global.N_additional_particles) * __SIZEOF_DOUBLE__);
 
-    global.cluster = (struct cluster *)malloc(global.N_particle * sizeof(struct cluster));
-    global.particle = (struct particle *)malloc(global.N_particle * sizeof(struct particle));
-    global.particle_neighbor_nr = (int *)malloc(global.N_particle * sizeof(int));
+    global.cluster = (struct cluster *)malloc((global.N_particle + global.N_additional_particles) * sizeof(struct cluster));
+    global.particle = (struct particle *)malloc((global.N_particle + global.N_additional_particles) * sizeof(struct particle));
+    global.particle_neighbor_nr = (int *)malloc((global.N_particle + global.N_additional_particles) * sizeof(int));
 
-    global.particle_eta = (double *)malloc(global.N_particle * sizeof(double));
-
+    global.particle_eta = (double *)malloc((global.N_particle + global.N_additional_particles) * sizeof(double));
 
     // this means the discs cover about half of the system (0.4)
     // with random deposition we can go up to around 0.5
@@ -382,11 +384,13 @@ void initialize_particles()
         else
             global.particle_is_active[i] = 0;
 
-        if (Rand() < global.obstacle_ratio){
+        if (Rand() < global.obstacle_ratio)
+        {
             global.particle_eta[i] = global.eta_large;
             global.particle_color[i] = 8;
         }
-        else{
+        else
+        {
             global.particle_eta[i] = global.eta_small;
             global.particle_color[i] = 6;
         }
@@ -406,6 +410,91 @@ void initialize_particles()
     }
 
     printf("%d Particles initialized successfully\n", global.N_particle);
+}
+
+void add_particles_at_later_time()
+{
+    int i, j, N;
+    double min_dist;
+    double x_temp, y_temp, theta_temp;
+    double dx, dy, dr;
+    char overlap;
+
+    int exit_from_loop = 0;
+    int N_particles_to_be_added = global.N_additional_particles / global.N_times_to_add_more_particles;
+    int tries = 0;
+
+
+    min_dist = 2.0 * global.generic_particle_R;
+    printf("Min dist = %lf Max radius = %lf\n", min_dist, min_dist / 2.0);
+
+    i = global.N_particle;
+    while ((i < global.N_particle + N_particles_to_be_added) && (exit_from_loop == 0)) {
+
+        overlap = 1;
+
+        while (overlap && tries <= 10000)
+        {
+            x_temp = global.SX * Rand();
+            y_temp = global.SY * Rand();
+            overlap = 0;
+
+            for (j = 0; j < i; j++)
+            {
+                calculate_PBC_folded_distance(&dx, &dy, x_temp, y_temp, global.particle_x[j], global.particle_y[j]);
+                dr = sqrt(dx * dx + dy * dy);
+                if (dr < min_dist)
+                {
+                    overlap = 1;
+                    break;
+                }
+            }
+        }
+        if (tries > 10000)        
+        {
+            printf("System too dense cannot place extra additional particles\n");
+        exit_from_loop = 1;
+        }
+        else {
+
+            global.particle_x[i] = x_temp;
+            global.particle_y[i] = y_temp;
+            global.particle_angle_rad[i] = 2.0 * PI * Rand();
+            global.particle_R[i] = global.generic_particle_R;
+            global.particle_cosfi[i] = cos(global.particle_angle_rad[i]);
+            global.particle_sinfi[i] = sin(global.particle_angle_rad[i]);
+
+            global.particle_neighbor_nr[i] = 0;
+
+            if (Rand() < global.generic_particle_active_fraction)
+                global.particle_is_active[i] = 1;
+            else
+                global.particle_is_active[i] = 0;
+
+            global.particle_eta[i] = global.eta_large;
+            global.particle_color[i] = 8;
+
+            global.particle_motor_force[i] = global.particle_is_active[i] * global.generic_particle_motor_force;
+            global.particle_motor_ellapsed_time[i] = 0;
+            global.particle_motor_total_time[i] = global.generic_particle_motor_minimum_time;
+            global.particle_motor_total_time[i] += (int)floor(Rand() * (global.generic_particle_motor_maximum_time - global.generic_particle_motor_minimum_time));
+
+            global.particle_fx[i] = 0.0;
+            global.particle_fy[i] = 0.0;
+
+            global.particle_dx_so_far[i] = 0.0;
+            global.particle_dy_so_far[i] = 0.0;
+            global.particle_dx[i] = 0.0;
+            global.particle_dy[i] = 0.0;
+        }
+
+        i++;
+    }
+
+    printf("Added %d more particles from %d total amount. Remaining particles to be added: %d\n", i - global.N_particle, N_particles_to_be_added, global.N_additional_particles - i + global.N_particle);
+    global.N_particle = i;
+    printf("%d total particles \n", global.N_particle);
+    fflush(stdout);
 }
 
 void calculate_internal_motor_forces()
@@ -462,21 +551,25 @@ void calculate_interparticle_forces()
     }
 }
 
-void calculate_dragging_force() {
+void calculate_dragging_force()
+{
     int i, j, i_particle;
     double theta;
 
     for (i = 0; i < global.N_particle; i++)
     {
-        if (global.particle_eta[i] == global.eta_small) {
+        if (global.particle_eta[i] == global.eta_small)
+        {
             global.particle_fx[i] += global.dragging_force_x;
             global.particle_fy[i] += global.dragging_force_y;
         }
     }
 }
 
-void calculate_thermal_noise() {
-    for(int i=0; i<global.N_particle; i++) {
+void calculate_thermal_noise()
+{
+    for (int i = 0; i < global.N_particle; i++)
+    {
         global.particle_fx[i] += global.temperature * gasdev();
         global.particle_fy[i] += global.temperature * gasdev();
     }
@@ -607,7 +700,7 @@ void initialize_pinning_grid()
 
 void interaction_particle_pinningsiteGridCell(int k, int i, int j)
 {
-    // k - particle id 
+    // k - particle id
     // i,j - pinning grid cell coordinates
     double dx, dy;
     double pinning_force_x, pinning_force_y;
@@ -728,8 +821,8 @@ void move_particles()
 
     for (i = 0; i < global.N_particle; i++)
     {
-        dx = 1/global.particle_eta[i] * global.particle_fx[i] * global.dt;
-        dy = 1/global.particle_eta[i] * global.particle_fy[i] * global.dt;
+        dx = 1 / global.particle_eta[i] * global.particle_fx[i] * global.dt;
+        dy = 1 / global.particle_eta[i] * global.particle_fy[i] * global.dt;
 
         // gather the dx,dy so far
         global.particle_dx_so_far[i] += dx;
@@ -765,19 +858,19 @@ void move_particles()
         global.particle_cosfi[i] = cos(global.particle_angle_rad[i]);
         global.particle_sinfi[i] = sin(global.particle_angle_rad[i]);
 
-        if (global.particle_eta[i] == global.eta_small) {
+        if (global.particle_eta[i] == global.eta_small)
+        {
             global.avg_fx += global.particle_fx[i];
             global.avg_fy += global.particle_fy[i];
         }
     }
 
-     // zero all forces on particles
-    for (i=0; i < global.N_particle; i++){
+    // zero all forces on particles
+    for (i = 0; i < global.N_particle; i++)
+    {
         global.particle_fx[i] = 0;
         global.particle_fy[i] = 0;
     }
-
-
 }
 
 /* Statistics */
@@ -870,12 +963,12 @@ void write_statistics()
     double largest_cluster_size_avg;
     double avg_fx, avg_fy;
 
-    avg_fx = global.avg_fx / (double) global.N_particle / (double)global.statistics_time;
-    avg_fy = global.avg_fy / (double) global.N_particle / (double)global.statistics_time;
+    avg_fx = global.avg_fx / (double)global.N_particle / (double)global.statistics_time;
+    avg_fy = global.avg_fy / (double)global.N_particle / (double)global.statistics_time;
     largest_cluster_size_avg = global.largest_cluster_size_sum / (double)global.statistics_time;
 
     fprintf(global.statistics_file, "%d %f %f %f\n", global.time, largest_cluster_size_avg, avg_fx, avg_fy);
-    //fprintf(global.statistics_file, "%d %f\n", global.time, largest_cluster_size_avg);
+    // fprintf(global.statistics_file, "%d %f\n", global.time, largest_cluster_size_avg);
     fflush(global.statistics_file);
     global.largest_cluster_size_sum = 0;
     global.avg_fx = 0;
@@ -897,7 +990,8 @@ void run_simulation()
         calculate_interparticle_forces();
         calculate_thermal_noise();
 
-        if (global.time < global.relax_time || global.time >= global.relax_time + global.relax_duration) {
+        if (global.time < global.relax_time || global.time >= global.relax_time + global.relax_duration)
+        {
             calculate_dragging_force();
         }
 
@@ -926,6 +1020,17 @@ void run_simulation()
         if (global.flag_Verlet_needs_rebuild == 1)
         {
             rebuild_Verlet();
+        }
+
+        if ( global.time && (global.time % global.N_steps_to_add_more_particles == 0) && 
+            global.time/global.N_steps_to_add_more_particles <= global.N_times_to_add_more_particles)
+        {
+            printf("Adding extra particles\n");
+            fflush(stdout);
+            add_particles_at_later_time();
+            rebuild_Verlet();
+            clusterize_particles();
+            initialize_statistics();
         }
     }
 

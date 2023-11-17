@@ -45,6 +45,9 @@ struct global_struct {
 
     int relax_time;
     int relax_duration;
+    int N_additional_particles;
+    int N_steps_to_add_more_particles;
+    int N_times_to_add_more_particles;
 
     int *Verlet_i;
     int *Verlet_j;
