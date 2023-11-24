@@ -38,7 +38,7 @@ def plot(file):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15,7))
     ax.plot(time, Vx, color='red', linewidth=1)
     ax.tick_params(axis='both', labelsize=15)
-    ax.set_xlim(xmin=0, xmax=10**7)
+    ax.set_xlim(xmin=0, xmax=5*10**7)
     ax.set_ylim(ymin=-0.1)
     ax.set_xlabel(rf'$\tau$', fontsize=20)
     ax.set_ylabel(rf'$\langle V_x \rangle$', fontsize=20)
