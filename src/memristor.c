@@ -379,11 +379,6 @@ void initialize_particles()
 
         global.particle_neighbor_nr[i] = 0;
 
-        if (Rand() < global.generic_particle_active_fraction)
-            global.particle_is_active[i] = 1;
-        else
-            global.particle_is_active[i] = 0;
-
         if (Rand() < global.obstacle_ratio)
         {
             global.particle_eta[i] = global.eta_large;
@@ -394,6 +389,14 @@ void initialize_particles()
             global.particle_eta[i] = global.eta_small;
             global.particle_color[i] = 6;
         }
+
+        if (Rand() < global.generic_particle_active_fraction)
+            global.particle_is_active[i] = 1;
+        else{
+            global.particle_is_active[i] = 0;
+            global.particle_color[i] = 1;
+        }
+
 
         global.particle_motor_force[i] = global.particle_is_active[i] * global.generic_particle_motor_force;
         global.particle_motor_ellapsed_time[i] = 0;
@@ -558,7 +561,7 @@ void calculate_dragging_force()
 
     for (i = 0; i < global.N_particle; i++)
     {
-        if (global.particle_eta[i] == global.eta_small)
+        if (global.particle_eta[i] == global.eta_small && global.particle_is_active[i])
         {
             global.particle_fx[i] += global.dragging_force_x;
             global.particle_fy[i] += global.dragging_force_y;
@@ -570,8 +573,10 @@ void calculate_thermal_noise()
 {
     for (int i = 0; i < global.N_particle; i++)
     {
-        global.particle_fx[i] += global.temperature * gasdev();
-        global.particle_fy[i] += global.temperature * gasdev();
+        if (global.particle_is_active[i]){
+            global.particle_fx[i] += global.temperature * gasdev();
+            global.particle_fy[i] += global.temperature * gasdev();
+        }
     }
 }
 
