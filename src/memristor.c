@@ -392,11 +392,11 @@ void initialize_particles()
 
         if (Rand() < global.generic_particle_active_fraction)
             global.particle_is_active[i] = 1;
-        else{
+        else
+        {
             global.particle_is_active[i] = 0;
             global.particle_color[i] = 1;
         }
-
 
         global.particle_motor_force[i] = global.particle_is_active[i] * global.generic_particle_motor_force;
         global.particle_motor_ellapsed_time[i] = 0;
@@ -427,12 +427,12 @@ void add_particles_at_later_time()
     int N_particles_to_be_added = global.N_additional_particles / global.N_times_to_add_more_particles;
     int tries = 0;
 
-
     min_dist = 2.0 * global.generic_particle_R;
     printf("Min dist = %lf Max radius = %lf\n", min_dist, min_dist / 2.0);
 
     i = global.N_particle;
-    while ((i < global.N_particle + N_particles_to_be_added) && (exit_from_loop == 0)) {
+    while ((i < global.N_particle + N_particles_to_be_added) && (exit_from_loop == 0))
+    {
 
         overlap = 1;
 
@@ -453,12 +453,13 @@ void add_particles_at_later_time()
                 }
             }
         }
-        if (tries > 10000)        
+        if (tries > 10000)
         {
             printf("System too dense cannot place extra additional particles\n");
-        exit_from_loop = 1;
+            exit_from_loop = 1;
         }
-        else {
+        else
+        {
 
             global.particle_x[i] = x_temp;
             global.particle_y[i] = y_temp;
@@ -573,7 +574,8 @@ void calculate_thermal_noise()
 {
     for (int i = 0; i < global.N_particle; i++)
     {
-        if (global.particle_is_active[i]){
+        if (global.particle_is_active[i])
+        {
             global.particle_fx[i] += global.temperature * gasdev();
             global.particle_fy[i] += global.temperature * gasdev();
         }
@@ -826,47 +828,50 @@ void move_particles()
 
     for (i = 0; i < global.N_particle; i++)
     {
-        dx = 1 / global.particle_eta[i] * global.particle_fx[i] * global.dt;
-        dy = 1 / global.particle_eta[i] * global.particle_fy[i] * global.dt;
-
-        // gather the dx,dy so far
-        global.particle_dx_so_far[i] += dx;
-        global.particle_dy_so_far[i] += dy;
-
-        check_Verlet_need_to_rebuild(i);
-
-        global.particle_x[i] += dx;
-        global.particle_y[i] += dy;
-
-        // PBC put the long particle back into the box if it exited the box
-        if (global.particle_x[i] > global.SX)
-            global.particle_x[i] -= global.SX;
-        if (global.particle_y[i] > global.SY)
-            global.particle_y[i] -= global.SY;
-        if (global.particle_x[i] <= 0.0)
-            global.particle_x[i] += global.SX;
-        if (global.particle_y[i] <= 0.0)
-            global.particle_y[i] += global.SY;
-
-        /* new motion angle for particle*/
-        // global.particle_angle_rad[i] += global.particle_tumbling_torque[i] * global.dt;
-
-        if (global.particle_angle_rad[i] >= 2 * PI)
+        if (global.particle_is_active[i])
         {
-            global.particle_angle_rad[i] -= 2 * PI;
-        }
-        else if (global.particle_angle_rad[i] < 0)
-        {
-            global.particle_angle_rad[i] += 2 * PI;
-        }
+            dx = 1 / global.particle_eta[i] * global.particle_fx[i] * global.dt;
+            dy = 1 / global.particle_eta[i] * global.particle_fy[i] * global.dt;
 
-        global.particle_cosfi[i] = cos(global.particle_angle_rad[i]);
-        global.particle_sinfi[i] = sin(global.particle_angle_rad[i]);
+            // gather the dx,dy so far
+            global.particle_dx_so_far[i] += dx;
+            global.particle_dy_so_far[i] += dy;
 
-        if (global.particle_eta[i] == global.eta_small)
-        {
-            global.avg_fx += global.particle_fx[i];
-            global.avg_fy += global.particle_fy[i];
+            check_Verlet_need_to_rebuild(i);
+
+            global.particle_x[i] += dx;
+            global.particle_y[i] += dy;
+
+            // PBC put the long particle back into the box if it exited the box
+            if (global.particle_x[i] > global.SX)
+                global.particle_x[i] -= global.SX;
+            if (global.particle_y[i] > global.SY)
+                global.particle_y[i] -= global.SY;
+            if (global.particle_x[i] <= 0.0)
+                global.particle_x[i] += global.SX;
+            if (global.particle_y[i] <= 0.0)
+                global.particle_y[i] += global.SY;
+
+            /* new motion angle for particle*/
+            // global.particle_angle_rad[i] += global.particle_tumbling_torque[i] * global.dt;
+
+            if (global.particle_angle_rad[i] >= 2 * PI)
+            {
+                global.particle_angle_rad[i] -= 2 * PI;
+            }
+            else if (global.particle_angle_rad[i] < 0)
+            {
+                global.particle_angle_rad[i] += 2 * PI;
+            }
+
+            global.particle_cosfi[i] = cos(global.particle_angle_rad[i]);
+            global.particle_sinfi[i] = sin(global.particle_angle_rad[i]);
+
+            if (global.particle_eta[i] == global.eta_small)
+            {
+                global.avg_fx += global.particle_fx[i];
+                global.avg_fy += global.particle_fy[i];
+            }
         }
     }
 
@@ -1027,8 +1032,8 @@ void run_simulation()
             rebuild_Verlet();
         }
 
-        if ( global.time && (global.time % global.N_steps_to_add_more_particles == 0) && 
-            global.time/global.N_steps_to_add_more_particles <= global.N_times_to_add_more_particles)
+        if (global.time && (global.time % global.N_steps_to_add_more_particles == 0) &&
+            global.time / global.N_steps_to_add_more_particles <= global.N_times_to_add_more_particles)
         {
             printf("Adding extra particles\n");
             fflush(stdout);
