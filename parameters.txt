@@ -1,7 +1,7 @@
-basename relax_t25000000
+basename relax_t5000000_a90_N1700_2
 SX 100.0
 SY 100.0
-N_particle 800
+N_particle 1700
 N_pinningsites 0
 dt 0.001
 total_runtime 50000000
@@ -9,14 +9,14 @@ echo_time 10000
 movie_time 500
 statistics_time 1000
 relax_time 15000000
-relax_duration 25000000
+relax_duration 5000000
 N_additional_particles 0
 N_steps_to_add_more_particles 100000
 N_times_to_add_more_particles 20
 generic_particle_R 1.0
 generic_particle_k_spring 20.0
 generic_particle_motor_force 1 
-generic_particle_active_fraction 100.0
+generic_particle_active_fraction 0.9
 generic_particle_motor_minimum_time 150000
 generic_pinningsite_R 0
 generic_pinningsite_fxmax 0
@@ -26,4 +26,4 @@ eta_small 1
 eta_large 160
 obstacle_ratio 0.8
 temperature 1
-seedToSet 0 
+seedToSet 0  
