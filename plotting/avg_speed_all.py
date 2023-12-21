@@ -6,9 +6,6 @@ import sys
 import math
 import matplotlib.patheffects as pe
 
-relax_start = 2000000
-stat_time = 1000
-
 def get_parameters_from_filename(file):
     params = file.split("_")
     
@@ -18,7 +15,6 @@ def get_parameters_from_filename(file):
 
 def gather_data(directory):
     V = dict()
-    Vx = []
 
     for file in os.listdir(directory):
         with open(os.path.join(directory, file),"r") as f:
@@ -26,41 +22,34 @@ def gather_data(directory):
             data = np.loadtxt(f, unpack=True)
             Vx = data[2]
             time = data[0]
+            V[relax_duration_time] = Vx
 
-            restart_speed = 0
-            i = 0
-            while time[i] < relax_start:
-                i += 1
-            restart_index = i + relax_duration_time//stat_time - 1
-            # 100 == 100 * stat_time
-            end_index = restart_index + 200
-            start_speed = Vx[restart_index : end_index]
-
-            print(f"start {restart_index}, time {time[i]}, end {end_index}")
-            print(start_speed)
-
-            V[relax_duration_time] = sum(start_speed)/len(start_speed)
-    
     V = dict(sorted(V.items()))
 
-    return V
-    
-def plot(directory):
-    data = gather_data(directory)
+    return V, time
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,7))
-    ax.plot(data.keys(), data.values(), color='blue', linewidth=2, marker='o')
+def plot(file):
+    V, time = gather_data(file)
+
+    colors = ['b', 'c', 'g', 'k', 'm', 'r', 'y', 'orange', 'brown', 'navy', 'hotpink', 'lime']
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15,7))
+    
+    i = 0
+    for relax_duration, v in V.items():
+        ax.plot(time, v, colors[i], linewidth=1) 
+        i += 1
+
     ax.tick_params(axis='both', labelsize=15)
-    #ax.set_xlim(xmin=0, xmax=5*10**7)
-    #ax.set_ylim(ymin=-0.1)
+    ax.set_xlim(xmin=0, xmax=1*10**7)
+    ax.set_ylim(ymin=-0.05)
     ax.set_xlabel(rf'$\tau$', fontsize=20)
     ax.set_ylabel(rf'$\langle V_x \rangle$', fontsize=20)
 
     plt.show()
+
 
 if __name__ == '__main__':
     if not os.path.isdir(sys.argv[1]):
         print(f"{sys.argv[1]} not a directory.")
         sys.exit(-1)
     plot(sys.argv[1])
-
